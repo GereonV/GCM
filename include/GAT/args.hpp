@@ -141,7 +141,14 @@ namespace gat::args {
 				auto opt = argoptions(c);
 				if(!opt)
 					throw std::invalid_argument{std::string{"Unknown option: '"} + c + '\''};
-				res.set_opt(opt, sv.size() == ++i ? *++it : sv.substr(i));
+				auto arg = [&]() {
+					if(++i != sv.size())
+						return sv.substr(i);
+					if(++it != end)
+						*it;
+					throw std::invalid_argument{std::string{"Missing argument for option '"} + c + '\''};
+				};
+				res.set_opt(opt, arg());
 				break;
 			}
 		}
