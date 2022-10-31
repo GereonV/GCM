@@ -6,7 +6,7 @@
 #ifdef _WIN32
 #define DEFAULT_VAULT_LOCATION "%USERPROFILE%\\.gpwvault"
 #else
-#define DEFAULT_VAULT_LOCATION "~/.gpwvault"
+#define DEFAULT_VAULT_LOCATION "$HOME/.gpwvault"
 #endif
 
 constexpr std::pair<std::string_view, bool> source(std::span<std::string_view const> args) noexcept {
@@ -65,6 +65,10 @@ Options:
 		vault.assign(begin, end);
 	} else {
 		std::ifstream file{vault_path.data(), std::ios_base::binary};
+		if(!file.is_open()) {
+			std::cerr << "gpw: fatal: couldn't open \"" << vault_path << "\"\n";
+			return 1;
+		}
 		std::istream_iterator<unsigned char> begin{file}, end;
 		vault.assign(begin, end);
 	}
