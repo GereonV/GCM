@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <iterator>
@@ -77,19 +78,19 @@ Options:
 		return 1;
 	}
 	std::string vault;
-	if(std::ifstream file{vault_path, std::ios_base::binary}; file.is_open()) {
-		std::istreambuf_iterator<char> begin{file}, end;
-		vault.assign(begin, end);
-	} else {
-		std::cerr << "gpw: fatal: couldn't open \"" << vault_path << "\"\n";
-		return 1;
+	if(std::filesystem::exists(vault_path)) {
+		std::ifstream file{vault_path, std::ios_base::binary};
+		if(!file.is_open()) {
+			std::cerr << "gpw: fatal: couldn't open \"" << vault_path << "\"\n";
+			return 1;
+		}
+		vault.assign<std::istreambuf_iterator<char>>(file, {});
+		std::cout << "Password: " << std::flush;
+		std::string password;
+		std::getline(std::cin, password);
+		use_password(vault, password);
 	}
-	std::cout << "Password: " << std::flush;
-	std::string password;
-	std::getline(std::cin, password);
-	use_password(vault, password);
 } catch(std::exception const & e) {
 	std::cerr << "gpw: fatal: " << e.what() << '\n';
 	return 1;
 }
-
