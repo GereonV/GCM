@@ -87,7 +87,9 @@ namespace gat::args {
 			options.*ptr = true;
 		}
 
-		constexpr void set_opt(std::string_view ReturnT::* ptr, std::string_view sv) noexcept {
+		constexpr void set_opt(std::string_view ReturnT::* ptr, std::string_view sv) {
+			if(options.*ptr.data())
+				throw std::invalid_argument{std::string{"Already specified \""} + options.*ptr + "\" for this option"};
 			options.*ptr = sv;
 			_args = true;
 		}
