@@ -17,7 +17,6 @@ int main(int argc, char ** argv) try {
 	};
 	auto [r, a] = gat::args::parse<result, gat::args::all, gat::args::options<
 			gat::args::option<result, 'h', "help", &result::help>,
-			gat::args::option<result, 'q', "quiet", &result::quiet>,
 			gat::args::option<result, 'v', "version", &result::version>
 		>{}, gat::args::options<
 			gat::args::argoption<result, 0, "", nullptr>
@@ -27,7 +26,6 @@ int main(int argc, char ** argv) try {
 
 Options:
 	-h, --help              Display this
-	-q, --quiet             Don't be verbose
 	-v, --version           Display the version number
 )";
 		return 0;
@@ -39,6 +37,7 @@ Options:
 	switch(a.size()) {
 	case 0:
 		vault_path = DEFAULT_VAULT_LOCATION;
+		std::cout << "Using vault \"" << vault_path << "\"\n";
 		break;
 	case 1:
 		vault_path = a[0].data();
@@ -47,8 +46,6 @@ Options:
 		std::cerr << "gpw: fatal: vault not specified correctly (use -h for help)\n";
 		return 1;
 	}
-	if(!r.quiet)
-		std::cout << "Using vault \"" << vault_path << "\"\n";
 	std::vector<unsigned char> vault;
 	if(std::ifstream file{vault_path, std::ios_base::binary}; file.is_open()) {
 		std::istream_iterator<unsigned char> begin{file}, end;
@@ -57,6 +54,11 @@ Options:
 		std::cerr << "gpw: fatal: couldn't open \"" << vault_path << "\"\n";
 		return 1;
 	}
+	// TODO saved authentification
+	std::cout << "Password: " << std::flush;
+	std::string password;
+	std::getline(std::cin, password);
+	// TODO authentificate and decrypt
 } catch(std::exception const & e) {
 	std::cerr << "gpw: fatal: " << e.what() << '\n';
 	return 1;
