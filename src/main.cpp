@@ -85,11 +85,10 @@ Options:
 			return 1;
 		}
 		vault.assign<std::istreambuf_iterator<char>>(file, {});
-		std::cout << "Password: " << std::flush;
-		std::string password;
-		std::getline(std::cin, password);
-		use_password(vault, password);
 	}
+	std::cout << "Password: " << std::flush;
+	std::string password;
+	std::getline(std::cin, password);
 } catch(std::exception const & e) {
 	std::cerr << "gpw: fatal: " << e.what() << '\n';
 	return 1;
