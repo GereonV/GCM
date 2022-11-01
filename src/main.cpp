@@ -27,6 +27,14 @@ static std::string generate_password(std::size_t size, std::string_view allowed 
 	return pass;
 }
 
+constexpr void use_password(std::span<char> data, std::string_view pass) noexcept {
+	for(auto i = pass.size(); auto & c : data) {
+		c ^= pass[--i];
+		if(!i)
+			i = pass.size();
+	}
+}
+
 int main(int argc, char ** argv) try {
 	struct result {
 		std::string_view size;
@@ -68,19 +76,18 @@ Options:
 		std::cerr << "gpw: fatal: vault not specified correctly (use -h for help)\n";
 		return 1;
 	}
-	std::vector<unsigned char> vault;
+	std::string vault;
 	if(std::ifstream file{vault_path, std::ios_base::binary}; file.is_open()) {
-		std::istream_iterator<unsigned char> begin{file}, end;
+		std::istreambuf_iterator<char> begin{file}, end;
 		vault.assign(begin, end);
 	} else {
 		std::cerr << "gpw: fatal: couldn't open \"" << vault_path << "\"\n";
 		return 1;
 	}
-	// TODO saved authentification
 	std::cout << "Password: " << std::flush;
 	std::string password;
 	std::getline(std::cin, password);
-	// TODO authentificate and decrypt
+	use_password(vault, password);
 } catch(std::exception const & e) {
 	std::cerr << "gpw: fatal: " << e.what() << '\n';
 	return 1;
