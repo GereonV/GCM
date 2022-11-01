@@ -68,7 +68,7 @@ Options:
 	switch(a.size()) {
 	case 0:
 		vault_path = DEFAULT_VAULT_LOCATION;
-		std::cout << "Using vault \"" << vault_path << "\"\n";
+		std::cout << "Using vault \"" DEFAULT_VAULT_LOCATION "\"\n";
 		break;
 	case 1:
 		vault_path = a[0].data();
@@ -77,18 +77,28 @@ Options:
 		std::cerr << "gpw: fatal: vault not specified correctly (use -h for help)\n";
 		return 1;
 	}
+	std::size_t max_name_size, max_item_size;
 	std::string vault;
-	if(std::filesystem::exists(vault_path)) {
-		std::ifstream file{vault_path, std::ios_base::binary};
-		if(!file.is_open()) {
-			std::cerr << "gpw: fatal: couldn't open \"" << vault_path << "\"\n";
-			return 1;
-		}
-		vault.assign<std::istreambuf_iterator<char>>(file, {});
+	if(!std::filesystem::exists(vault_path))
+		max_name_size = max_item_size = 0;
+	else if(std::ifstream file{vault_path, std::ios_base::binary}; !file.is_open()) {
+		std::cerr << "gpw: fatal: couldn't open \"" << vault_path << "\"\n";
+		return 1;
+	} else {
+		file >> max_name_size >> max_item_size;
+		vault.assign<std::istreambuf_iterator<char>>(file.ignore(), {});
 	}
 	std::cout << "Password: " << std::flush;
 	std::string password;
 	std::getline(std::cin, password);
+	// TODO read and execute commands
+	std::ofstream file{vault_path, std::ios_base::binary};
+	if(!file.is_open()) {
+		std::cerr << "gpw: fatal: couldn't open \"" << vault_path << "\"\n";
+		return 1;
+	}
+	file << max_name_size << ' ' << max_item_size << ' ';
+	file.write(vault.data(), vault.size());
 } catch(std::exception const & e) {
 	std::cerr << "gpw: fatal: " << e.what() << '\n';
 	return 1;
