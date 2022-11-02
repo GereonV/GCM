@@ -1,9 +1,9 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
-#include <iterator>
 #include <random>
 #include "GAT/args.hpp"
+#include "gpw.hpp"
 
 #ifdef _WIN32
 #define DEFAULT_VAULT_LOCATION "%USERPROFILE%\\.gpwvault"
@@ -26,14 +26,6 @@ static std::string generate_password(std::size_t size, std::string_view allowed 
 	while(size--)
 		pass += allowed[dist(mt)];
 	return pass;
-}
-
-constexpr void use_password(std::span<char> data, std::string_view pass) noexcept {
-	for(auto i = pass.size(); auto & c : data) {
-		c ^= pass[--i];
-		if(!i)
-			i = pass.size();
-	}
 }
 
 int main(int argc, char ** argv) try {
@@ -77,16 +69,14 @@ Options:
 		std::cerr << "gpw: fatal: vault not specified correctly (use -h for help)\n";
 		return 1;
 	}
-	std::size_t max_name_size, max_item_size;
-	std::string vault;
-	if(!std::filesystem::exists(vault_path))
-		max_name_size = max_item_size = 0;
-	else if(std::ifstream file{vault_path, std::ios_base::binary}; !file.is_open()) {
-		std::cerr << "gpw: fatal: couldn't open \"" << vault_path << "\"\n";
-		return 1;
-	} else {
-		file >> max_name_size >> max_item_size;
-		vault.assign<std::istreambuf_iterator<char>>(file.ignore(), {});
+	gpw::vault vault;
+	if(std::filesystem::exists(vault_path)) {
+		std::ifstream file{vault_path, std::ios_base::binary};
+		if(!file.is_open()) {
+			std::cerr << "gpw: fatal: couldn't open \"" << vault_path << "\"\n";
+			return 1;
+		}
+		file >> vault;
 	}
 	std::cout << "Password: " << std::flush;
 	std::string password;
@@ -97,8 +87,7 @@ Options:
 		std::cerr << "gpw: fatal: couldn't open \"" << vault_path << "\"\n";
 		return 1;
 	}
-	file << max_name_size << ' ' << max_item_size << ' ';
-	file.write(vault.data(), vault.size());
+	file << vault;
 } catch(std::exception const & e) {
 	std::cerr << "gpw: fatal: " << e.what() << '\n';
 	return 1;
