@@ -19,16 +19,6 @@ constexpr std::size_t to_size(std::string_view sv) noexcept {
 	return res;
 }
 
-static std::string generate_password(std::size_t size, std::string_view allowed = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~") noexcept {
-	static std::mt19937 mt{std::random_device{}()};
-	std::string pass;
-	pass.reserve(size);
-	std::uniform_int_distribution<std::size_t> dist{0, allowed.size() - 1};
-	while(size--)
-		pass += allowed[dist(mt)];
-	return pass;
-}
-
 int main(int argc, char ** argv) try {
 	struct result {
 		std::string_view size;

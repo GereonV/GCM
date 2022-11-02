@@ -9,6 +9,16 @@
 
 namespace gpw {
 
+	inline std::string generate_password(std::size_t size, std::string_view allowed = " !\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~") noexcept {
+		static std::mt19937 mt{std::random_device{}()};
+		std::string pass;
+		pass.reserve(size);
+		std::uniform_int_distribution<std::size_t> dist{0, allowed.size() - 1};
+		while(size--)
+			pass += allowed[dist(mt)];
+		return pass;
+	}
+
 	template<std::size_t Extent = std::dynamic_extent>
 	constexpr void use_password(std::span<char, Extent> data, std::string_view pass) noexcept {
 		for(auto i = pass.size(); auto & c : data) {
