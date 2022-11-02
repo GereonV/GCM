@@ -82,9 +82,13 @@ Options:
 	std::cout << "Password: " << std::flush;
 	std::string password;
 	std::getline(std::cin, password);
-	for(std::string buffer, buffer2; std::cin.good();) {
+	for(std::string buffer, buffer2;;) {
 		std::cout << ">>> " << std::flush;
 		std::cin >> buffer;
+		if(!std::cin.good()) {
+			std::cout << '\n';
+			break;
+		}
 		if(buffer == "help") {
 			std::cout << R"(list            List all slots
 size [<size>]   Request or set size of password generator
