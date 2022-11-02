@@ -1,3 +1,5 @@
+#include <cstdlib>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -7,9 +9,11 @@
 #include "gpw.hpp"
 
 #ifdef _WIN32
-#define DEFAULT_VAULT_LOCATION "%USERPROFILE%\\.gpwvault"
+#define HOME_ENV "HOMEPATH"
+#define VAULT "\\.gpwvault"
 #else
-#define DEFAULT_VAULT_LOCATION "$HOME/.gpwvault"
+#define HOME_ENV "HOME"
+#define VAULT "/.gpwvault"
 #endif
 
 constexpr std::size_t to_size(std::string_view sv) noexcept {
@@ -45,14 +49,18 @@ Options:
 		return 0;
 	}
 	auto size = r.size.data() ? to_size(r.size) : 64;
-	char const * vault_path;
+	char * vault_path, * home;
+	std::size_t len;
 	switch(a.size()) {
 	case 0:
-		vault_path = DEFAULT_VAULT_LOCATION;
-		std::cout << "Using vault \"" DEFAULT_VAULT_LOCATION "\"\n";
+		len = std::strlen(home = std::getenv(HOME_ENV));
+		vault_path = new char[len + sizeof(VAULT)];
+		std::memcpy(vault_path, home, len);
+		std::memcpy(vault_path + len, VAULT, sizeof(VAULT));
+		std::cout << "Using vault \"" << vault_path << "\"\n";
 		break;
 	case 1:
-		vault_path = a[0].data();
+		vault_path = const_cast<char *>(a[0].data());
 		break;
 	default:
 		std::cerr << "gpw: fatal: vault not specified correctly (use -h for help)\n";
@@ -117,7 +125,7 @@ Identifiers:
 				}
 				std::string_view id{buffer2.data() + pos, buffer2.data() + buffer2.find_last_not_of(' ') + 1};
 				if(buffer == "new") {
-					auto pass = generate_password(size);
+					auto pass = gpw::generate_password(size);
 					std::cout << "New Password: " << pass << "\n";
 					gpw::use_password({pass.data(), size}, password);
 					vault.emplace_back(id, std::move(pass));
